@@ -1,0 +1,55 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>印尼电力招标与政策监测</title>
+<style>
+:root{--bg:#f7f8fa;--card:#fff;--tx:#1a1d21;--mut:#6b7280;--bd:#e3e6ea;--ac:#0b6bcb}
+@media(prefers-color-scheme:dark){:root{--bg:#14171a;--card:#1d2126;--tx:#e8eaed;--mut:#9aa3ad;--bd:#2d333a;--ac:#5aa9ff}}
+*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--tx);font:15px/1.6 -apple-system,"Segoe UI","PingFang SC","Microsoft YaHei",sans-serif}
+.w{max-width:860px;margin:0 auto;padding:20px 16px}
+h1{font-size:22px;margin:0 0 4px}.sub{color:var(--mut);font-size:13px;margin-bottom:14px}
+.bar{display:flex;gap:8px;flex-wrap:wrap;margin-bottom:14px}
+input,select{padding:8px 10px;border:1px solid var(--bd);border-radius:8px;background:var(--card);color:var(--tx);font:inherit}
+input{flex:1;min-width:160px}
+.c{background:var(--card);border:1px solid var(--bd);border-radius:10px;padding:12px 14px;margin-bottom:10px}
+.c a{color:var(--ac);text-decoration:none;font-weight:600}.c a:hover{text-decoration:underline}
+.m{color:var(--mut);font-size:12.5px;margin-top:4px}.t{display:inline-block;padding:1px 8px;border-radius:99px;border:1px solid var(--bd);font-size:12px;margin-right:6px}
+.en{color:var(--mut);font-size:13px}.ft{color:var(--mut);font-size:12px;margin-top:18px}
+</style>
+</head>
+<body><div class="w">
+<h1>印尼电力招标与政策监测</h1>
+<div class="sub" id="up">加载中…</div>
+<div class="bar">
+<input id="q" placeholder="搜索关键词，如 PLN、PLTS、储能">
+<select id="cat"><option value="">全部类型</option><option>招标</option><option>政策法规</option><option>项目动态</option><option>其他</option><option>未分类</option></select>
+</div>
+<div id="list"></div>
+<div class="ft">信息由 AI 自动汇总，可能有误，金额、日期、资质要求等请以官方原文公告为准。</div>
+</div>
+<script>
+let D=[];
+const $=id=>document.getElementById(id);
+function el(t,c,x){const e=document.createElement(t);if(c)e.className=c;if(x!=null)e.textContent=x;return e}
+function render(){
+  const q=$('q').value.trim().toLowerCase(),c=$('cat').value,box=$('list');box.innerHTML='';
+  const rows=D.filter(i=>(!c||i.category===c)&&(!q||JSON.stringify(i).toLowerCase().includes(q)));
+  if(!rows.length){box.appendChild(el('div','m','暂无匹配内容'));return}
+  rows.forEach(i=>{
+    const d=el('div','c'),a=el('a',null,i.title_zh||i.title);a.href=i.link;a.target='_blank';a.rel='noopener noreferrer';
+    d.appendChild(a);
+    if(i.summary_zh)d.appendChild(el('div',null,i.summary_zh));
+    if(i.summary_en)d.appendChild(el('div','en',i.summary_en));
+    const m=el('div','m');m.appendChild(el('span','t',i.category||'未分类'));
+    const bits=[i.source,(i.published||'').slice(0,10),i.owner&&('业主/机构：'+i.owner),i.amount&&('规模：'+i.amount),i.deadline&&('截止：'+i.deadline)].filter(Boolean);
+    m.appendChild(document.createTextNode(bits.join(' · ')));d.appendChild(m);box.appendChild(d);
+  });
+}
+fetch('data.json?'+Date.now()).then(r=>r.json()).then(j=>{
+  D=j;const last=j.map(i=>i.added||'').sort().pop();
+  $('up').textContent='共 '+j.length+' 条'+(last?' · 最近更新 '+last.slice(0,16).replace('T',' ')+' UTC':'');render();
+}).catch(()=>{$('up').textContent='数据加载失败（本地预览请用 python -m http.server）'});
+$('q').oninput=render;$('cat').onchange=render;
+</script></body></html>
